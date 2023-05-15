@@ -17,14 +17,15 @@ FROM ubuntu:20.04
 
 LABEL maintainer="Apache Software Foundation <dev@zeppelin.apache.org>"
 
-ENV Z_VERSION="0.10.0"
+ENV Z_VERSION="0.10.1"
 
 ENV LOG_TAG="[ZEPPELIN_${Z_VERSION}]:" \
     ZEPPELIN_HOME="/opt/zeppelin" \
+    SPARK_HOME="/opt/spark" \
     HOME="/opt/zeppelin" \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
+    JAVA_HOME=/usr/lib/jvm/java-8-openjdk-arm64 \
     ZEPPELIN_ADDR="0.0.0.0"
 
 RUN echo "$LOG_TAG install basic packages" && \
@@ -39,12 +40,12 @@ RUN echo "$LOG_TAG install basic packages" && \
 # Install conda to manage python and R packages
 ARG miniconda_version="py37_4.9.2"
 # Hashes via https://docs.conda.io/en/latest/miniconda_hashes.html
-ARG miniconda_sha256="79510c6e7bd9e012856e25dcb21b3e093aa4ac8113d9aa7e82a86987eabe1c31"
+ARG miniconda_sha256="ccbac800a2d897218dde1df3711d26299a083ca0beb118edf62cf8f3d9516da8"
 # Install python and R packages via conda
 COPY env_python_3_with_R.yml /env_python_3_with_R.yml
 
 RUN set -ex && \
-    wget -nv https://repo.anaconda.com/miniconda/Miniconda3-${miniconda_version}-Linux-x86_64.sh -O miniconda.sh && \
+    wget -nv https://repo.anaconda.com/miniconda/Miniconda3-${miniconda_version}-Linux-aarch64.sh -O miniconda.sh && \
     echo "${miniconda_sha256} miniconda.sh" > anaconda.sha256 && \
     sha256sum --strict -c anaconda.sha256 && \
     bash miniconda.sh -b -p /opt/conda && \
@@ -62,6 +63,15 @@ RUN set -ex && \
     # Allow to modify conda packages. This allows malicious code to be injected into other interpreter sessions, therefore it is disabled by default
     # chmod -R ug+rwX /opt/conda
 ENV PATH /opt/conda/envs/python_3_with_R/bin:/opt/conda/bin:$PATH
+
+ARG spark_version="3.1.2"
+ARG spark_sha="2385cb772f21b014ce2abd6b8f5e815721580d6e8bc42a26d70bbcdda8d303d886a6f12b36d40f6971b5547b70fae62b5a96146f0421cb93d4e51491308ef5d5"
+RUN wget -O /tmp/spark-${spark_version}-bin-hadoop3.2.tgz https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-hadoop3.2.tgz && \
+    echo "${spark_sha} /tmp/spark-${spark_version}-bin-hadoop3.2.tgz" > /tmp/spark.sha512 && \
+    sha512sum --strict -c /tmp/spark.sha512 && \
+    mkdir -p ${SPARK_HOME} && \
+    tar --strip-components=1 -zxvf /tmp/spark-${spark_version}-bin-hadoop3.2.tgz -C ${SPARK_HOME} && \
+    rm -f /tmp/spark-${spark_version}-bin-hadoop3.2.tgz /tmp/spark.sha512
 
 RUN echo "$LOG_TAG Download Zeppelin binary" && \
     mkdir -p ${ZEPPELIN_HOME} && \

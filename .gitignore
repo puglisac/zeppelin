@@ -129,3 +129,11 @@ tramp
 
 # jEnv file
 .java-version
+/*.tar.gz
+/scripts/docker/zeppelin/bin/zeppelin-0.10.1-bin-all.tgz
+/interpreter_DistributedResourcePoolTest/
+/interpreter_RemoteSchedulerTest/
+/interpreter_TimeoutLifecycleManagerTest/
+/conf_DistributedResourcePoolTest/
+/conf_RemoteSchedulerTest/
+/conf_TimeoutLifecycleManagerTest/
